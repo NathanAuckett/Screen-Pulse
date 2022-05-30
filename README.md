@@ -11,7 +11,7 @@ A port-forward or similar setup is required to make the network connection if th
 ### Server app
 The Server app takes a screenshot once every X milliseconds and acts as a simple HTTP server, awaiting a request from one or more Clients.
 
-![Server app preview](.\Server.png)
+![Server app preview](.\docs\Server.png)
 
 <br>
 
@@ -21,7 +21,7 @@ The Client app requests new images from the Server app every X milliseconds and 
 It's possible to adjust the Client behavior via the on-screen UI and more extensively via the config file located in "\AppData\Roaming\Screen Pulse".
 The on-screen UI options can be hidden with F1 to make full use of the window size to display the received image.
 
-![Client app preview](.\Client.png)
+![Client app preview](.\docs\Client.png)
 
 <br>
 
