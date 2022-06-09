@@ -2,7 +2,7 @@ from re import L
 from sqlite3 import connect
 from turtle import update
 import PySimpleGUI as sg
-from PIL import Image, ImageTk, ImageEnhance #for image formats
+from PIL import Image, ImageTk, ImageEnhance, ImageDraw, ImageFont #for image formats
 import os
 import threading
 import time
@@ -35,6 +35,7 @@ scaling = con.configDataGet("scaling", const.SCALING)
 invert = con.configDataGet("invert", const.INVERT)
 resample = con.configDataGet("resample", const.RESAMPLE)
 
+connectionLost = False #Mostly just for drawing status on image
 connectedOnce = False
 startingRefreshDelay = 1000 #Initial delay is fairly short as to quickly determine correct delay from server
 connectionFailedRefreshDelay = 3000
@@ -73,13 +74,14 @@ def strToSample(_resample):
 def updateImage():
     global imgWidth
     global imgHeight
+    global connectionLost
     if os.path.exists(myDir):
         try:
             img = cv2.imread(myDir)
             if (invert == "True"):
                 img = cv2.bitwise_not(img)
 
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #Converts colour to RGB because CV2 is stupid and uses BGR
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGBA) #Converts colour to RGB because CV2 is stupid and uses BGR
             img = Image.fromarray(img) #Convert to image object from CV2 array object
             
             aspect = img.size[0] / img.size[1]
@@ -111,6 +113,16 @@ def updateImage():
 
             enh = ImageEnhance.Sharpness(img)
             img = enh.enhance(sharpenFactor)
+            
+            #If dissconnected, show text on image
+            if (connectionLost):
+                txtImg = Image.new("RGBA", img.size, (255, 255, 255, 0))
+                fnt = ImageFont.truetype(r"C:\Windows\fonts\arial.ttf", 70)
+                d = ImageDraw.Draw(txtImg, mode="RGBA")
+                fntSize = fnt.getsize("Disconnected")
+                d.rectangle([0, 0, imgWidth, imgHeight], fill = (255, 0, 0, 75))
+                d.text((img.size[0] / 2 - fntSize[0] / 2, img.size[1] / 2 - fntSize[1] / 2), "Disconnected", font = fnt, fill=(255, 255, 255), stroke_width = 2, stroke_fill = (0, 0, 0))
+                img = Image.alpha_composite(img, txtImg)
 
             img = ImageTk.PhotoImage(image = img)
 
@@ -156,6 +168,7 @@ class Requester:
         global window
         global requesterInst
         global connectionTimeout
+        global connectionLost
 
         timer = Timer()
         timerThread = threading.Thread(target = timer.timer)
@@ -195,6 +208,7 @@ class Requester:
                                 window["-CONNECTION_STATUS-"].update("Connected.")
                                 connectedOnce = True
                                 self.connectionFailedCounter = 0
+                                connectionLost = False
                             else:
                                 window["-CONNECTION_STATUS-"].update("Disconnected. Retrying...")
                                 serverRefreshDelay = connectionFailedRefreshDelay
@@ -225,6 +239,8 @@ class Requester:
                         if (connectedOnce):
                             window["-CONNECTION_STATUS-"].update("Disconnected. Retrying...")
                             connectedOnce = False #This way the counter will be shown and the fail count begins on the next fail
+                            connectionLost = True
+                            updateImage()
                         else:
                             self.connectionFailedCounter += 1
                             window["-CONNECTION_STATUS-"].update(f"Connection failed({self.connectionFailedCounter}). Retrying...")
