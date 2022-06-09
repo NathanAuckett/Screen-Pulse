@@ -33,7 +33,7 @@ class Config:
                 "resample": const.RESAMPLE,
                 "xoff": const.XOFF,
                 "yoff": const.YOFF,
-                "zoom_Scale": const.ZOOM_SCALE
+                "zoom_scale": const.ZOOM_SCALE
             }
             
             self.configRewrite()

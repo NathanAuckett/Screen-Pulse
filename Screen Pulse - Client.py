@@ -49,9 +49,9 @@ canRequest = True #This updates in the timer thread to keep more or less consist
 refreshRateRequestTarget = 25
 refreshRateRequestCount = refreshRateRequestTarget
 
-zoomScale = 1;
-zoomXOff = 0;
-zoomYOff = 0;
+zoomScale = float(con.configDataGet("zoom_scale", const.ZOOM_SCALE))
+zoomXOff = int(con.configDataGet("xoff", const.XOFF))
+zoomYOff = int(con.configDataGet("yoff", const.YOFF))
 panSpd = 10
 imgWidth = 0
 imgHeight = 0
@@ -266,7 +266,7 @@ column = [
 layout = [
     [sg.pin(sg.Column(column, key = "-CONTROLS-"), )],
 
-    [sg.Image(key = "-IMAGE-", size = (0, 600), pad = (0, 0))]
+    [sg.Image(key = "-IMAGE-", size = (1100, 600), pad = (0, 0))]
 ]
 
 window = sg.Window(f"{const.APP_NAME}: Client", layout, grab_anywhere=True, use_default_focus = False, resizable = True, icon = const.APP_ICON, finalize = True)
@@ -295,6 +295,10 @@ while True:
     event, values = window.read()
 
     if event == "Exit" or event == sg.WIN_CLOSED:
+        con.configDataWrite("xoff", zoomXOff)
+        con.configDataWrite("yoff", zoomYOff)
+        con.configDataWrite("zoom_scale", zoomScale)
+
         break
     
     elif (event == "-NETWORK_SUBMIT-"):
@@ -388,13 +392,38 @@ while True:
     #Zoom and pan
     elif (event == "-XOFF-" + "Enter"):
         zoomXOff = int(values["-XOFF-"])
+        zoomYOff = int(values["-YOFF-"])
+        
+        zoomScale = round(float(values["-ZOOM_SCALE-"]), 2)
+        if (zoomScale < 1):
+            zoomScale = 1
+            window["-ZOOM_SCALE-"].update(zoomScale)
+
+        if (zoomScale > 5):
+            zoomScale = 5
+            window["-ZOOM_SCALE-"].update(zoomScale)
+
         updateImage()
     
     elif (event == "-YOFF-" + "Enter"):
+        zoomXOff = int(values["-XOFF-"])
         zoomYOff = int(values["-YOFF-"])
+        
+        zoomScale = round(float(values["-ZOOM_SCALE-"]), 2)
+        if (zoomScale < 1):
+            zoomScale = 1
+            window["-ZOOM_SCALE-"].update(zoomScale)
+
+        if (zoomScale > 5):
+            zoomScale = 5
+            window["-ZOOM_SCALE-"].update(zoomScale)
+
         updateImage()
     
     elif (event == "-ZOOM_SCALE-" + "Enter"):
+        zoomXOff = int(values["-XOFF-"])
+        zoomYOff = int(values["-YOFF-"])
+        
         zoomScale = round(float(values["-ZOOM_SCALE-"]), 2)
         if (zoomScale < 1):
             zoomScale = 1
@@ -407,22 +436,22 @@ while True:
         updateImage()
 
     elif (event == "Left"):
-        zoomXOff += panSpd
-        window["-XOFF-"].update(zoomXOff)
-
-        updateImage()
-    elif (event == "Right"):
         zoomXOff -= panSpd
         window["-XOFF-"].update(zoomXOff)
 
         updateImage()
+    elif (event == "Right"):
+        zoomXOff += panSpd
+        window["-XOFF-"].update(zoomXOff)
+
+        updateImage()
     elif (event == "Up"):
-        zoomYOff += panSpd
+        zoomYOff -= panSpd
         window["-YOFF-"].update(zoomYOff)
             
         updateImage()
     elif (event == "Down"):
-        zoomYOff -= panSpd
+        zoomYOff += panSpd
         window["-YOFF-"].update(zoomYOff)
 
         updateImage()
@@ -444,5 +473,6 @@ while True:
             window["-ZOOM_SCALE-"].update(zoomScale)
 
             updateImage()
+
 
 window.close()
