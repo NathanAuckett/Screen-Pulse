@@ -74,8 +74,9 @@ def strToSample(_resample):
 def updateImage():
     global imgWidth
     global imgHeight
+    global connectedOnce
     global connectionLost
-    if os.path.exists(myDir):
+    if (os.path.exists(myDir) and connectedOnce):
         try:
             img = cv2.imread(myDir)
             if (invert == "True"):
@@ -131,7 +132,7 @@ def updateImage():
         except Exception as e:
             print(e)
     else:
-        print("Receive image does not exist in directory!")
+        print("Receive image does not exist in directory or app has not connected once this session!")
 
 #Timer Thread/class
 class Timer:
@@ -268,13 +269,14 @@ column = [
     sg.Text("Request Delay(ms):"), sg.Input(size = (6, 1), default_text = int(con.configDataGet("refresh_rate", const.REFRESH_RATE_DEF)), key = "-DELAY-"),
     ],
     [sg.Text("Image Settings:"),
-    sg.Text("Scaling:"),  sg.Combo(values = ["Fit", "Fill"], default_value = scaling, size = (3, 2), key = "-SCALING-", enable_events = True),
+    sg.Text("Stretching:"),  sg.Combo(values = ["Fit", "Fill"], default_value = scaling, size = (3, 2), key = "-SCALING-", enable_events = True),
     sg.Text("Resampling method:"),  sg.Combo(values = ["NEAREST", "BILINEAR", "HAMMING", "BICUBIC", "LANCZOS"], default_value = resample, size = (9, 5), key = "-RESAMPLE-", enable_events = True),
     sg.Text("Sharpening:"), sg.Input(size = [3, 1], default_text = sharpenFactor, key = "-SHARPENING-"),
+    sg.Checkbox("Invert", default = invert == "True" , key = "-INVERT-", enable_events = True),
+    sg.VerticalSeparator(),
     sg.Text("Image scale (1-5):"), sg.Input(size = [4, 1], default_text = zoomScale, key = "-ZOOM_SCALE-"),
     sg.Text("Hor offset:"), sg.Input(size = [4, 1], default_text = zoomXOff, key = "-XOFF-"),
     sg.Text("Vert offset:"), sg.Input(size = [4, 1], default_text = zoomYOff, key = "-YOFF-"),
-    sg.Checkbox("Invert", default = invert == "True" , key = "-INVERT-", enable_events = True)
     ],
     [sg.Text("Press F1 to hide and show these controls."), sg.Text("Status:"), sg.Text(text = "Conecting...", key = "-CONNECTION_STATUS-")]
 ]
