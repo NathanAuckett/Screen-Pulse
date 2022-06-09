@@ -49,6 +49,12 @@ canRequest = True #This updates in the timer thread to keep more or less consist
 refreshRateRequestTarget = 25
 refreshRateRequestCount = refreshRateRequestTarget
 
+zoomScale = 1;
+zoomXOff = 0;
+zoomYOff = 0;
+imgWidth = 0
+imgHeight = 0
+
 def strToSample(_resample):
     if _resample == "NEAREST":
         return Image.NEAREST
@@ -64,6 +70,8 @@ def strToSample(_resample):
         return -1
 
 def updateImage():
+    global imgWidth
+    global imgHeight
     if os.path.exists(myDir):
         try:
             img = cv2.imread(myDir)
@@ -91,8 +99,14 @@ def updateImage():
                 else:
                     w = h * aspect
 
-            img = img.resize((int(w), int(h)), resample = strToSample(resample))
-            
+            imgWidth = w * zoomScale
+            imgHeight = h * zoomScale
+
+            img = img.resize((int(imgWidth), int(imgHeight)), resample = strToSample(resample))
+            wdif = imgWidth - w
+            hdif = imgHeight - h
+            img = img.crop((wdif / 2 + zoomXOff, hdif / 2 + zoomYOff, imgWidth - wdif / 2 + zoomXOff, imgHeight - hdif / 2 + zoomYOff))
+
             enh = ImageEnhance.Sharpness(img)
             img = enh.enhance(sharpenFactor)
 
@@ -255,6 +269,12 @@ window["-PASSWORD-"].bind("<Return>", "Enter") #Bind enter key to trigger event 
 window["-DELAY-"].bind("<Return>", "Enter")
 window["-SHARPENING-"].bind("<Return>", "Enter")
 window.bind("<Key-F1>", "F1")
+window.bind("<Key-Left>", "Left")
+window.bind("<Key-Right>", "Right")
+window.bind("<Key-Up>", "Up")
+window.bind("<Key-Down>", "Down")
+window.bind("<Control-=>", "Plus")
+window.bind("<Control-minus>", "Minus")
 
 #Begin initial server thread
 requesterInst = Requester()
@@ -356,6 +376,37 @@ while True:
 
         window.refresh()
         updateImage()
-        
+    
+    #Zoom and pan
+    elif (event == "Left"):
+        zoomXOff += 5
+
+        updateImage()
+    elif (event == "Right"):
+        zoomXOff -= 5
+
+        updateImage()
+    elif (event == "Up"):
+        zoomYOff += 5
+            
+        updateImage()
+    elif (event == "Down"):
+        zoomYOff -= 5
+
+        updateImage()
+    elif (event == "Plus"):
+        if (zoomScale < 5):
+            zoomScale += 0.01
+            if (zoomScale > 5):
+                zoomScale = 5
+            
+            updateImage()
+    elif (event == "Minus"):
+        if (zoomScale > 1):
+            zoomScale -= 0.01
+            if (zoomScale < 1):
+                zoomScale = 1
+            
+            updateImage()
 
 window.close()
