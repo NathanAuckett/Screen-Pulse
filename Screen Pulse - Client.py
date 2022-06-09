@@ -216,9 +216,10 @@ class Requester:
                                 refreshRateRequestCount = refreshRateRequestTarget
                         except Exception as e:
                             print(e)
-                            if (connectedOnce):
+                            if (connectionLost == False):
                                 window["-CONNECTION_STATUS-"].update("Disconnected. Retrying...")
-                                connectedOnce = False #This way the counter will be shown and the fail count begins on the next fail
+                                connectionLost = True
+                                updateImage() #Makes image show disconnected message
                             else:
                                 self.connectionFailedCounter += 1
                                 window["-CONNECTION_STATUS-"].update(f"Connection failed({self.connectionFailedCounter}). Retrying...")
@@ -237,9 +238,8 @@ class Requester:
                     except Exception as e:
                         print(e)
                         
-                        if (connectedOnce):
+                        if (connectionLost == False):
                             window["-CONNECTION_STATUS-"].update("Disconnected. Retrying...")
-                            connectedOnce = False #This way the counter will be shown and the fail count begins on the next fail
                             connectionLost = True
                             updateImage()
                         else:
