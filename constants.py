@@ -13,6 +13,10 @@ SCALING = "Fit"
 INVERT = False
 RESAMPLE = "LANCZOS"
 
+XOFF = "XOFF"
+YOFF = "YOFF"
+ZOOM_SCALE = "SCALE"
+
 IMAGE_RECIEVE_FILE_NAME = "\\recieved.jpg"
 IMAGE_CAPTURE_FILE_NAME = "\\capture.jpg"
 CONFIG_NAME = "\\" + APP_NAME + " Config.ini"

@@ -30,7 +30,10 @@ class Config:
                 "failedAttempMax" : str(const.FAILED_ATTEMPT_MAX),
                 "connectionTimeoutSeconds" : str(const.CONNECTION_TIMEOUT_SECONDS),
                 "invert": const.INVERT,
-                "resample": const.RESAMPLE
+                "resample": const.RESAMPLE,
+                "xoff": const.XOFF,
+                "yoff": const.YOFF,
+                "zoom_Scale": const.ZOOM_SCALE
             }
             
             self.configRewrite()

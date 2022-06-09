@@ -52,6 +52,7 @@ refreshRateRequestCount = refreshRateRequestTarget
 zoomScale = 1;
 zoomXOff = 0;
 zoomYOff = 0;
+panSpd = 10
 imgWidth = 0
 imgHeight = 0
 
@@ -103,6 +104,7 @@ def updateImage():
             imgHeight = h * zoomScale
 
             img = img.resize((int(imgWidth), int(imgHeight)), resample = strToSample(resample))
+            
             wdif = imgWidth - w
             hdif = imgHeight - h
             img = img.crop((wdif / 2 + zoomXOff, hdif / 2 + zoomYOff, imgWidth - wdif / 2 + zoomXOff, imgHeight - hdif / 2 + zoomYOff))
@@ -253,6 +255,9 @@ column = [
     sg.Text("Scaling:"),  sg.Combo(values = ["Fit", "Fill"], default_value = scaling, size = (3, 2), key = "-SCALING-", enable_events = True),
     sg.Text("Resampling method:"),  sg.Combo(values = ["NEAREST", "BILINEAR", "HAMMING", "BICUBIC", "LANCZOS"], default_value = resample, size = (9, 5), key = "-RESAMPLE-", enable_events = True),
     sg.Text("Sharpening:"), sg.Input(size = [3, 1], default_text = sharpenFactor, key = "-SHARPENING-"),
+    sg.Text("Image scale (1-5):"), sg.Input(size = [4, 1], default_text = zoomScale, key = "-ZOOM_SCALE-"),
+    sg.Text("Hor offset:"), sg.Input(size = [4, 1], default_text = zoomXOff, key = "-XOFF-"),
+    sg.Text("Vert offset:"), sg.Input(size = [4, 1], default_text = zoomYOff, key = "-YOFF-"),
     sg.Checkbox("Invert", default = invert == "True" , key = "-INVERT-", enable_events = True)
     ],
     [sg.Text("Press F1 to hide and show these controls."), sg.Text("Status:"), sg.Text(text = "Conecting...", key = "-CONNECTION_STATUS-")]
@@ -261,13 +266,16 @@ column = [
 layout = [
     [sg.pin(sg.Column(column, key = "-CONTROLS-"), )],
 
-    [sg.Image(key = "-IMAGE-", size = (640, 480), pad = (0, 0))]
+    [sg.Image(key = "-IMAGE-", size = (0, 600), pad = (0, 0))]
 ]
 
 window = sg.Window(f"{const.APP_NAME}: Client", layout, grab_anywhere=True, use_default_focus = False, resizable = True, icon = const.APP_ICON, finalize = True)
 window["-PASSWORD-"].bind("<Return>", "Enter") #Bind enter key to trigger event on delay input
 window["-DELAY-"].bind("<Return>", "Enter")
 window["-SHARPENING-"].bind("<Return>", "Enter")
+window["-XOFF-"].bind("<Return>", "Enter")
+window["-YOFF-"].bind("<Return>", "Enter")
+window["-ZOOM_SCALE-"].bind("<Return>", "Enter")
 window.bind("<Key-F1>", "F1")
 window.bind("<Key-Left>", "Left")
 window.bind("<Key-Right>", "Right")
@@ -378,20 +386,44 @@ while True:
         updateImage()
     
     #Zoom and pan
+    elif (event == "-XOFF-" + "Enter"):
+        zoomXOff = int(values["-XOFF-"])
+        updateImage()
+    
+    elif (event == "-YOFF-" + "Enter"):
+        zoomYOff = int(values["-YOFF-"])
+        updateImage()
+    
+    elif (event == "-ZOOM_SCALE-" + "Enter"):
+        zoomScale = round(float(values["-ZOOM_SCALE-"]), 2)
+        if (zoomScale < 1):
+            zoomScale = 1
+            window["-ZOOM_SCALE-"].update(zoomScale)
+
+        if (zoomScale > 5):
+            zoomScale = 5
+            window["-ZOOM_SCALE-"].update(zoomScale)
+        
+        updateImage()
+
     elif (event == "Left"):
-        zoomXOff += 5
+        zoomXOff += panSpd
+        window["-XOFF-"].update(zoomXOff)
 
         updateImage()
     elif (event == "Right"):
-        zoomXOff -= 5
+        zoomXOff -= panSpd
+        window["-XOFF-"].update(zoomXOff)
 
         updateImage()
     elif (event == "Up"):
-        zoomYOff += 5
+        zoomYOff += panSpd
+        window["-YOFF-"].update(zoomYOff)
             
         updateImage()
     elif (event == "Down"):
-        zoomYOff -= 5
+        zoomYOff -= panSpd
+        window["-YOFF-"].update(zoomYOff)
 
         updateImage()
     elif (event == "Plus"):
@@ -399,14 +431,18 @@ while True:
             zoomScale += 0.01
             if (zoomScale > 5):
                 zoomScale = 5
-            
+            zoomScale = round(zoomScale, 2)
+            window["-ZOOM_SCALE-"].update(zoomScale)
+
             updateImage()
     elif (event == "Minus"):
         if (zoomScale > 1):
             zoomScale -= 0.01
             if (zoomScale < 1):
                 zoomScale = 1
-            
+            zoomScale = round(zoomScale, 2)
+            window["-ZOOM_SCALE-"].update(zoomScale)
+
             updateImage()
 
 window.close()
